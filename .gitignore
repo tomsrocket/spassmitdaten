@@ -1,3 +1,6 @@
+# Local
+screenshots/*
+
 # Logs
 logs
 *.log
