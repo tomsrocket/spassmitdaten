@@ -7,6 +7,7 @@ const https = require('https');
 const sharp = require('sharp');
 const csvParse = require('csv-parse')
 const screenshotApp = require("node-server-screenshot");
+const YAML = require('yaml')
 
 const { promisify } = require('util')
 const readFileAsync = promisify(fs.readFile)
@@ -28,8 +29,9 @@ const jpgQuality = 65;
 
 
 
-var args = process.argv.slice(2);
-let numRowsToProcess = args[0] ? args[0] : 5;
+const args = process.argv.slice(2);
+const numRowsToProcess = args[0] ? args[0] : 5;
+const visitWebsites = args[1] ? args[1]: 0;
 
 console.log("Processing Rows:", numRowsToProcess);
 console.log("Use first command line argument for number of rows");
@@ -55,7 +57,7 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
     return new Promise((resolve, reject) => {
       const req = lib.get(url, res => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          return reject(new Error(`Status Code: ${res.statusCode}`));
+          return resolve([res.statusCode, '']);
         }
   
         const data = [];
@@ -64,7 +66,7 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
           data.push(chunk);
         });
   
-        res.on('end', () => resolve(Buffer.concat(data).toString()));
+        res.on('end', () => resolve([res.statusCode, Buffer.concat(data).toString()]));
       });
   
       req.on('error', reject);
@@ -95,10 +97,10 @@ let lineCounter = 0;
         console.log("Spreadsheet url:", spreadsheetUrl)
 
         // Read url content
-        const data = await httpsRequestAsync(
-            spreadsheetUrl,
+        const [responseCode, data] = await httpsRequestAsync(
+            spreadsheetUrl
         );
-        console.log("Downloaded bytes:", data.length);
+        console.log("Response code:", responseCode, "Downloaded bytes:", data.length);
 
         // Parse csv into output array
         const parsed = await csvParseAsync(data);
@@ -148,14 +150,16 @@ async function processRow(row) {
         return new Promise(function(resolve, reject) {resolve();});        
     }
 
-    const title = row[6];
-    const keywords = row[4] ? row[4].split(", ") : [];
     const url = row[0];
     const category = row[2];
+    const keywords = row[4] ? row[4].split(", ") : [];
+    const region = row[5]
+    const title = row[6].replace(/"/g,'\\"');
     const desc = row[7] ? row[7] : "";
     const mdfive = md5(url);
 
     process.stdout.write(title + " -> ");
+
 
     const jsDate = new Date(parts[2], parts[1]-1, parts[0]);
     const isoDate = jsDate.toISOString();
@@ -163,12 +167,48 @@ async function processRow(row) {
     const slug = title.toLowerCase().replace(/[^üöäßÄÖÜ\w\d]+/g, "-").replace(/^-/, "");
     const categoryString = keywords.join("]\n - [")
 
+    const filename = slug + ".md"
+    const outputfile = "../blog/source/_posts/" + filename;
+
+    // read last crawl information
+    let responseCode = 0;
+    let responseSize = 0;
+    let lastCrawlDate = 0;
+    if (fs.existsSync(outputfile)) {
+        const oldContent = await readFileAsync(outputfile);
+//        console.log("oldcontent", oldContent.toString());
+        const oldYaml = YAML.parseAllDocuments(oldContent.toString());
+        const yamlData = oldYaml[0];
+//        console.log("OLD YAML", filename, yamlData );
+//        good way to access the yaml data as javascript object:yamlData.toJSON();
+        responseCode = yamlData.get('responseCode');
+        responseSize = yamlData.get('responseSize');
+        lastCrawlDate = yamlData.get('lastCrawlDate');
+        console.log("[o] Old status", responseCode, responseSize, lastCrawlDate);
+    }
+    // get new crawl information
+    if (visitWebsites || !lastCrawlDate) {
+        console.log(" [/] (Re-)visiting website..")
+        let data = '';
+        [responseCode, data] = await httpsRequestAsync(
+            url
+        );
+        responseSize = data.length;
+        lastCrawlDate = new Date().toISOString();
+        console.log("[n] New status", responseCode, responseSize, lastCrawlDate);
+    }
+
+    // compile hexo markdown content for article
     const content = `---
-title: ${title}
+title: "${title}"
 date: ${isoDate}
 slug: ${slug}
 thumbnail: /thumbnails/${slug}.jpg
 external: ${url}
+region: ${region}
+responseCode: ${responseCode}
+responseSize: ${responseSize}
+lastCrawlDate: ${lastCrawlDate}
 categories: 
  - [${categoryString}]
 tags: 
@@ -178,17 +218,15 @@ ${desc}
 
 `;
 
-    const filename = slug + ".md"
-    
-    const outputFile = "../blog/source/_posts/" + filename;
-    fs.writeFileSync(outputFile, content); 
-    const filestats = fs.statSync(outputFile);
+    // write hexo markdown file 
+    fs.writeFileSync(outputfile, content); 
+    const filestats = fs.statSync(outputfile);
     if (!filestats.size) {
         console.log(err);
         return new Promise(function(resolve, reject) {reject(err);});
     }
-
        
+    // generate screensot and thumbnail
     const address = url;
     var largeScreenshotFile = "../screenshots/" + slug + ".png";
     var publishedScreenshot = "../blog/source/thumbnails/" + slug + ".jpg";
@@ -199,15 +237,20 @@ ${desc}
 
         if (!(fs.existsSync(largeScreenshotFile) && fs.statSync(largeScreenshotFile).size > 50)) {
 
-            console.log("Generating screenshot: ", largeScreenshotFile);
+            process.stdout.write("Screenshot target: " + largeScreenshotFile);
             await loadPage(address, largeScreenshotFile);   
+            if (!(fs.existsSync(largeScreenshotFile) && fs.statSync(largeScreenshotFile).size > 50)) {
+                console.log("OOPS! SKIPPING THUMBNAIL! Screenshot could not generated.");
+            }
         }
 
-        if (!(fs.existsSync(publishedScreenshot) && fs.statSync(publishedScreenshot).size > 50)) {        
+        if ((fs.existsSync(largeScreenshotFile) && fs.statSync(largeScreenshotFile).size > 50)
+            && !(fs.existsSync(publishedScreenshot) && fs.statSync(publishedScreenshot).size > 50)) {        
 
-            console.log("Generating thumbnail: ", largeScreenshotFile);
-            await convert(largeScreenshotFile, publishedScreenshot, { width: thumbnailWidth, height: thumbnailHeight, position: "top" });
+            process.stdout.write(" [/] Generating thumbnail: " + publishedScreenshot);
+            await convert(largeScreenshotFile, publishedScreenshot, { width: thumbnailWidth});
         } 
+        console.log("(^^)");
     } 
     // We dont need to always return a promise. In an async funtion any non-promise-response will be wrapped in a resolved promise automagically.
 }
@@ -221,15 +264,20 @@ ${desc}
  */
 async function loadPage(address, output)
 {
-    console.log("Processing", address);
+    process.stdout.write(" -> Screenshot source: " + address);
     
     return new Promise(function(resolve, reject) {
  
         screenshotApp.fromURL(address, output, {
             width: pageWidth,
             height: pageHeight, 
-        }, function(){
-            console.log("wrote " + output);
+        }, function(err){
+            if (err) {
+                console.log("Error during screenshot: ", err);
+                reject(err);
+            }
+            process.stdout.write(" -> [x] Success");
+
             resolve();
         });
     });
@@ -253,7 +301,7 @@ async function convert(inputFile, outputFile, resizeOptions) {
       })
       .toFile(outputFile)
           .then(function(newFileInfo) {
-              console.log("Success");
+              process.stdout.write(" -> [x] Success");
               resolve(newFileInfo);
           })
           .catch(function(err) {
