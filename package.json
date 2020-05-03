@@ -1,0 +1,37 @@
+{
+  "name": "spassmitdaten",
+  "version": "0.0.5",
+  "description": "Source code of spassmitdaten.de",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomsrocket/spassmitdaten.git"
+  },
+  "keywords": [
+    "open",
+    "data",
+    "big",
+    "data",
+    "dataviz",
+    "linklist"
+  ],
+  "author": "Thomas Werner",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/tomsrocket/spassmitdaten/issues"
+  },
+  "homepage": "https://github.com/tomsrocket/spassmitdaten#readme",
+  "dependencies": {
+    "hexo": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3"
+  }
+}
