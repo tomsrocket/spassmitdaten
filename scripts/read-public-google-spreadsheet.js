@@ -125,9 +125,8 @@ let lineCounter = 0;
 
 /**
  * @param {Array} row
- *
- *   Link  Datum    Typ  Relevanz  Stichworte  Region  Titel  Beschreibung
- *   0     1        2   3         4           5       6      7
+ *  Link  Datum  Typ   Cat-Neu   Lang  Region Relevanz  Stichworte  Titel  Beschreibung
+ *   0     1     2     3         4     5       6        7           8      9
 */
 // eslint-disable-next-line consistent-return
 async function processRow(row) {
@@ -145,13 +144,20 @@ async function processRow(row) {
         console.log(`SKIP because date column is not a date: ${date}`);
         return new Promise(((resolve) => { resolve(); }));
     }
+    if (!row[3]) {
+        console.log('SKIP because empty category');
+        return new Promise(((resolve) => { resolve(); }));
+    }
 
     const url = row[0];
-    const category = row[2];
-    const keywords = row[4] ? row[4].split(', ') : [];
+    const type = row[2];
+    const categories = row[3] ? row[3].replace(/, /g, '##').replace(/ \//g, ',').split('##') : [];
+    const language = row[4];
     const region = row[5];
-    const title = row[6].replace(/"/g, '\\"');
-    const desc = row[7] ? row[7] : '';
+    const relevance = row[6];
+    const tags = row[7] ? row[7].split(', ') : [];
+    const title = row[8].replace(/"/g, '\\"');
+    const desc = row[9] ? row[9] : '';
 
     process.stdout.write(`${title} -> `);
 
@@ -160,7 +166,8 @@ async function processRow(row) {
     const isoDate = myDateFormat(jsDate);
 
     const slug = title.toLowerCase().replace(/[^üöäßÄÖÜ\w\d]+/g, '-').replace(/^-/, '');
-    const categoryString = keywords.join(']\n - [');
+    const categoryString = categories.join(']\n - [');
+    const tagString = tags.join(']\n - [');
 
     const filename = `${slug}.md`;
     const outputfile = `../blog/source/_posts/${filename}`;
@@ -215,6 +222,9 @@ async function processRow(row) {
 title: "${title}"
 date: ${isoDate}
 slug: ${slug}
+lang: ${language}
+rank: ${relevance}
+type: ${type}
 thumbnail: /thumbnails/${slug}.jpg
 external: ${url}
 region: ${region}
@@ -225,7 +235,7 @@ screenshotDate: ${screenshotDate}
 categories: 
  - [${categoryString}]
 tags: 
- - ${category}
+ - [${tagString}]
 ---
 ${desc}
 
