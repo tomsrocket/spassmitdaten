@@ -144,8 +144,8 @@ async function processRow(row) {
         console.log(`SKIP because date column is not a date: ${date}`);
         return new Promise(((resolve) => { resolve(); }));
     }
-    if (!row[3]) {
-        console.log('SKIP because empty category');
+    if (!(row[3] && row[8])) {
+        console.log('SKIP because empty category or title');
         return new Promise(((resolve) => { resolve(); }));
     }
 
