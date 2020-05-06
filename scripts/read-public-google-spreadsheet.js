@@ -76,44 +76,52 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
 };
 
 let spreadsheetUrl = '';
-let spreadsheetRange = '';
 let lineCounter = 0;
 
 /**
  * Main function
  */
 (async () => {
-    try {
-        // Load spreadsheet Url from config file
+    try { 
+        // Load config file
         const content = await readFileAsync('config/config.json');
-        const config = JSON.parse(content);
-        spreadsheetUrl = config.spreadsheetCsvUrlPublic;
-        spreadsheetRange = config.spreadsheetRange;
-        console.log('Spreadsheet url:', spreadsheetUrl);
-        console.log('Unused spreadsheet range:', spreadsheetRange);
+        const outerconfig = JSON.parse(content);
+        console.log(outerconfig);
 
-        // Read url content
-        const [responseCode, data] = await httpsRequestAsync(
-            spreadsheetUrl,
-        );
-        console.log('Response code:', responseCode, 'Downloaded bytes:', data.length);
+        // Config can contain many spreadsheet urls
+        for (const config of outerconfig) {
+            lineCounter = 0;
+            spreadsheetUrl = config.spreadsheetCsvUrlPublic;
 
-        // Parse csv into output array
-        const parsed = await csvParseAsync(data);
-        console.log('Found lines:', parsed.length);
-
-        // Process every line of CSV file
-        // eslint-disable-next-line no-restricted-syntax
-        for (const line of parsed) {
-            lineCounter += 1;
-            if (lineCounter <= numRowsToProcess) {
-                // eslint-disable-next-line no-await-in-loop
-                await processRow(line).catch((err) => {
-                    console.error(err);
-                    throw new Error('Fehler in Zeile: ');
-                });
+            console.log('################################################# ## # x - ');
+            console.log('# NOW Processing spreadsheet:', spreadsheetUrl);
+            console.log('################################################# ## # x - ');
+    
+            // Read url content
+            const [responseCode, data] = await httpsRequestAsync(
+                spreadsheetUrl,
+            );
+            console.log('Response code:', responseCode, 'Downloaded bytes:', data.length);
+    
+            // Parse csv into output array
+            const parsed = await csvParseAsync(data);
+            console.log('Found lines:', parsed.length);
+    
+            // Process every line of CSV file
+            // eslint-disable-next-line no-restricted-syntax
+            for (const line of parsed) {
+                lineCounter += 1;
+                if (lineCounter <= numRowsToProcess) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await processRow(line).catch((err) => {
+                        console.error(err);
+                        throw new Error('Fehler in Zeile: ');
+                    });
+                }
             }
+    
         }
+
     } catch (err) {
         console.error('Error in main function:', err);
     }
