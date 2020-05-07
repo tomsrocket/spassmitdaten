@@ -81,8 +81,9 @@ let lineCounter = 0;
 /**
  * Main function
  */
+/* eslint-disable no-restricted-syntax, no-await-in-loop */
 (async () => {
-    try { 
+    try {
         // Load config file
         const content = await readFileAsync('config/config.json');
         const outerconfig = JSON.parse(content);
@@ -96,32 +97,28 @@ let lineCounter = 0;
             console.log('################################################# ## # x - ');
             console.log('# NOW Processing spreadsheet:', spreadsheetUrl);
             console.log('################################################# ## # x - ');
-    
+
             // Read url content
             const [responseCode, data] = await httpsRequestAsync(
                 spreadsheetUrl,
             );
             console.log('Response code:', responseCode, 'Downloaded bytes:', data.length);
-    
+
             // Parse csv into output array
             const parsed = await csvParseAsync(data);
             console.log('Found lines:', parsed.length);
-    
+
             // Process every line of CSV file
-            // eslint-disable-next-line no-restricted-syntax
             for (const line of parsed) {
                 lineCounter += 1;
                 if (lineCounter <= numRowsToProcess) {
-                    // eslint-disable-next-line no-await-in-loop
                     await processRow(line).catch((err) => {
                         console.error(err);
                         throw new Error('Fehler in Zeile: ');
                     });
                 }
             }
-    
         }
-
     } catch (err) {
         console.error('Error in main function:', err);
     }
