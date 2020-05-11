@@ -77,6 +77,7 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
 
 let spreadsheetUrl = '';
 let lineCounter = 0;
+let categoryReplace = {};
 
 /**
  * Main function
@@ -86,13 +87,15 @@ let lineCounter = 0;
     try {
         // Load config file
         const content = await readFileAsync('config/config.json');
-        const outerconfig = JSON.parse(content);
-        console.log(outerconfig);
+        const config = JSON.parse(content);
+        console.log(config);
+
+        categoryReplace = config.categoryReplace;
 
         // Config can contain many spreadsheet urls
-        for (const config of outerconfig) {
+        for (const spreadsheets of config.spreadsheets) {
             lineCounter = 0;
-            spreadsheetUrl = config.spreadsheetCsvUrlPublic;
+            spreadsheetUrl = spreadsheets.spreadsheetCsvUrlPublic;
 
             console.log('################################################# ## # x - ');
             console.log('# NOW Processing spreadsheet:', spreadsheetUrl);
@@ -156,8 +159,16 @@ async function processRow(row) {
 
     const url = row[0];
     const type = row[2];
-    const categories = row[3] ? row[3].replace(/, /g, '##').replace(/ \//g, ',').split('##') : [];
-    const language = row[4];
+    let categories = row[3] ? row[3].replace(/, /g, '##').replace(/ \//g, ',').split('##') : [];
+    categories = categories.map((cat) => {
+        let fixedCatName = cat;
+        for (const [key, value] of Object.entries(categoryReplace)) {
+            fixedCatName = fixedCatName.replace(key, value);
+        }
+        return fixedCatName;
+    });
+
+    const language = row[4] ? row[4].toUpperCase() : '';
     const region = row[5];
     const relevance = row[6];
     const tags = row[7] ? row[7].split(', ') : [];
