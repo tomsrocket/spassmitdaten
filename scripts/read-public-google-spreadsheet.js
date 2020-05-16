@@ -183,8 +183,8 @@ async function processRow(row) {
 
     const slug = title.toLowerCase().replace(/[^üöäßÄÖÜ\w\d]+/g, '-').replace(/^-/, '');
     const categoryString = categories.join(']\n - [');
-    const tagString = tags.join(']\n - [');
-
+    let tagString = tags.join(']\n - [');
+    tagString = tagString ? `\n - [${tagString}]` : '';
     const filename = `${slug}.md`;
     const outputfile = `../blog/source/_posts/${filename}`;
 
@@ -250,8 +250,7 @@ lastCrawlDate: ${lastCrawlDate}
 screenshotDate: ${screenshotDate}
 categories: 
  - [${categoryString}]
-tags: 
- - [${tagString}]
+tags:${tagString}
 ---
 ${desc}
 
