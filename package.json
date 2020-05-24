@@ -4,7 +4,7 @@
   "description": "Source code of spassmitdaten.de",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "deploy": "cd scripts;node read-public-google-spreadsheet.js 2000;cd ../blog;npx hexo generate;npx hexo deploy;cd .."
   },
   "repository": {
     "type": "git",
@@ -31,8 +31,9 @@
     "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.1.0",
     "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-config-hexo": "^4.1.0",
     "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-react": "^7.19.0",
-    "eslint-plugin-jsx-a11y": "^6.2.3"
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.19.0"
   }
 }
