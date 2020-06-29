@@ -1,15 +1,16 @@
 {
-  "name": "spass/mit/daten",
+  "name": "spassmitdaten",
   "version": "0.0.3",
   "description": "Dieses Repository enthält den Code für spassmitdaten.de",
   "main": "read-public-google-spreadsheet.js",
   "dependencies": {
-    "csv-parse": "^4.8.3",
-    "electron": "^7.1.5",
+    "csv-parse": "^4.10.1",
+    "electron": "^7.3.2",
+    "follow-redirects": "^1.12.1",
     "md5": "^2.2.1",
-    "node-server-screenshot": "^0.2.1",
+    "node-server-screenshot": "^0.2.4",
     "sharp": "^0.21.3",
-    "yaml": "^1.9.2"
+    "yaml": "^1.10.0"
   },
   "scripts": {
     "generate": "node read-public-google-spreadsheet.js"
@@ -24,5 +25,14 @@
   "bugs": {
     "url": "https://github.com/tomsrocket/spassmitdaten/issues"
   },
-  "homepage": "https://github.com/tomsrocket/spassmitdaten#readme"
+  "homepage": "https://github.com/tomsrocket/spassmitdaten#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-react": "^7.20.1",
+    "eslint-plugin-react-hooks": "^2.5.1"
+  }
 }
