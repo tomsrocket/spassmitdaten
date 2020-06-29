@@ -1,6 +1,5 @@
 const fs = require('fs');
-const http = require('http');
-const https = require('https');
+const { http, https } = require('follow-redirects');
 const sharp = require('sharp');
 const csvParse = require('csv-parse');
 const screenshotApp = require('node-server-screenshot');
@@ -53,7 +52,9 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
         // eslint-disable-next-line consistent-return
         const req = lib.get(url, (res) => {
             if (res.statusCode < 200 || res.statusCode >= 300) {
-                return resolve([res.statusCode, '']);
+                console.log('ERROR', res.headers);
+                reject();
+                // return resolve([res.statusCode, '']);
             }
 
             const data = [];
@@ -62,7 +63,9 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
                 data.push(chunk);
             });
 
-            res.on('end', () => resolve([res.statusCode, Buffer.concat(data).toString()]));
+            res.on('end', () => {
+                resolve([res.statusCode, Buffer.concat(data).toString()]);
+            });
         });
 
         req.on('error', reject);
