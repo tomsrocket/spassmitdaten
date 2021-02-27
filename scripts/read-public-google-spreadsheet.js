@@ -53,8 +53,8 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
         const req = lib.get(url, (res) => {
             if (res.statusCode < 200 || res.statusCode >= 300) {
                 console.log('ERROR', res.headers);
-                reject();
-                // return resolve([res.statusCode, '']);
+                // reject();
+                return resolve([res.statusCode, '']);
             }
 
             const data = [];
@@ -68,7 +68,10 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
             });
         });
 
-        req.on('error', reject);
+        req.on('error', (err) => {
+            console.log('SEVERE ERROR', err);
+            reject();
+        });
 
         if (postData) {
             req.write(postData);
