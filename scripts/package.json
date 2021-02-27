@@ -4,16 +4,16 @@
   "description": "Dieses Repository enthält den Code für spassmitdaten.de",
   "main": "read-public-google-spreadsheet.js",
   "dependencies": {
-    "csv-parse": "^4.10.1",
-    "electron": "^7.3.2",
-    "follow-redirects": "^1.12.1",
-    "md5": "^2.2.1",
+    "csv-parse": "^4.15.3",
+    "follow-redirects": "^1.13.3",
+    "md5": "^2.3.0",
     "node-server-screenshot": "^0.2.4",
-    "sharp": "^0.21.3",
+    "sharp": "^0.27.2",
     "yaml": "^1.10.0"
   },
   "scripts": {
-    "generate": "node read-public-google-spreadsheet.js"
+    "generate": "node read-public-google-spreadsheet.js 2000",
+    "remove-images": "[ -z  \"$FILE\" ] && echo 'ERROR! Run it like this: \"FILE=awesome-public-datasets npm run remove-images\"' && exit;rm ../screenshots/$FILE.png;rm ../blog/source/thumbnails/$FILE.jpg && echo 'IMAGES WERE REMOVED!'"
   },
   "repository": {
     "type": "git",
@@ -27,12 +27,13 @@
   },
   "homepage": "https://github.com/tomsrocket/spassmitdaten#readme",
   "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb": "^18.2.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.22.0",
-    "eslint-plugin-jsx-a11y": "^6.3.1",
-    "eslint-plugin-react": "^7.20.1",
-    "eslint-plugin-react-hooks": "^2.5.1"
+    "electron": "^11.3.0",
+    "eslint": "^7.20.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.22.0",
+    "eslint-plugin-react-hooks": "^4.2.0"
   }
 }
