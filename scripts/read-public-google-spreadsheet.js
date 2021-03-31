@@ -5,6 +5,7 @@ const csvParse = require('csv-parse');
 const screenshotApp = require('node-server-screenshot');
 const YAML = require('yaml');
 const { promisify } = require('util');
+const { exit } = require('process');
 
 const readFileAsync = promisify(fs.readFile);
 const csvParseAsync = promisify(csvParse);
@@ -19,7 +20,8 @@ const pageHeight = 1380; // make longer screenshots so we can cut off the silly 
 // preview images
 const thumbnailWidth = 800;
 const jpgQuality = 65;
-
+const markdownDir = '../blog/source/_posts/'
+const oldFileDir = '../old_links/'
 
 const args = process.argv.slice(2);
 const numRowsToProcess = args[0] ? args[0] : 5;
@@ -84,6 +86,7 @@ const httpsRequestAsync = async (url, method = 'GET', postData) => {
 let spreadsheetUrl = '';
 let lineCounter = 0;
 let categoryReplace = {};
+let allFilenames = [];
 
 /**
  * Main function
@@ -128,6 +131,18 @@ let categoryReplace = {};
                 }
             }
         }
+
+        // Check for deleted files
+        fs.readdirSync(markdownDir).forEach(file => {
+            if (allFilenames.indexOf(file) == -1) {
+                console.log("LINK WAS DELETED in GOOGLE DOC: ", markdownDir + file)
+                fs.rename(markdownDir + file, oldFileDir + file, function (err) {
+                    if (err) throw err
+                    console.log('Successfully moved to:', oldFileDir + file)
+                })
+            }
+        });
+
     } catch (err) {
         console.error('Error in main function:', err);
     }
@@ -192,7 +207,8 @@ async function processRow(row) {
     let tagString = tags.join(']\n - [');
     tagString = tagString ? `\n - [${tagString}]` : '';
     const filename = `${slug}.md`;
-    const outputfile = `../blog/source/_posts/${filename}`;
+    allFilenames.push(filename)
+    const outputfile = `${markdownDir}${filename}`;
 
     // read last crawl information
     let responseCode = 0;
@@ -254,7 +270,7 @@ responseCode: ${responseCode}
 responseSize: ${responseSize}
 lastCrawlDate: ${lastCrawlDate}
 screenshotDate: ${screenshotDate}
-categories: 
+categories:
  - [${categoryString}]
 tags:${tagString}
 ---
