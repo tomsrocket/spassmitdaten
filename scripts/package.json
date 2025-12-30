@@ -7,7 +7,7 @@
     "csv-parse": "^4.15.3",
     "follow-redirects": "^1.13.3",
     "md5": "^2.3.0",
-    "node-server-screenshot": "^0.2.4",
+    "puppeteer": "^24.2.1",
     "sharp": "^0.27.2",
     "yaml": "^1.10.0"
   },
